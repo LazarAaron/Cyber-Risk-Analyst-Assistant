@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Help Assistant</title>
+    <!-- Include Marked.js to parse markdown nicely -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            color: #2c3e50;
+        }
+        .chat-container { 
+            width: 100%; 
+            max-width: 500px; 
+            height: 85vh;
+            background: #ffffff; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+            border-radius: 35px;
+            overflow: hidden;
+            border: 5px solid rgba(255,255,255,0.7);
+        }
+        .header { 
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%); 
+            padding: 22px; 
+            text-align: center; 
+            font-weight: 700; 
+            font-size: 1.35rem; 
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(0, 131, 176, 0.2);
+            z-index: 10;
+        }
+        .bot-logo {
+            font-size: 1.8rem;
+            background: white;
+            border-radius: 50%;
+            height: 48px;
+            width: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .chatbox { 
+            flex: 1; 
+            padding: 25px 20px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            background: #fafcfd;
+            scroll-behavior: smooth;
+        }
+        .msg-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            max-width: 88%;
+            animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .msg-wrapper.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .msg-wrapper.bot {
+            align-self: flex-start;
+        }
+        .msg-logo {
+            font-size: 1.6rem;
+            min-width: 36px;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .msg { 
+            padding: 16px 22px; 
+            border-radius: 24px; 
+            font-size: 0.95rem;      
+            letter-spacing: 0.3px;   
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            /* Handle Markdown content inside */
+            line-height: 1.6;
+        }
+        
+        /* Specific Markdown Styling */
+        .msg p {
+            margin: 0 0 10px 0;
+        }
+        .msg p:last-child {
+            margin: 0;
+        }
+        .msg ul, .msg ol {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding-left: 20px;
+        }
+        .msg li {
+            margin-bottom: 14px; /* INCREASED GAP FOR POINTERS */
+        }
+        .msg li:last-child {
+            margin-bottom: 0;
+        }
+        /* END Markdown Styling */
+
+        .user .msg { 
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            color: white; 
+            border-bottom-right-radius: 6px;
+        }
+        .bot .msg { 
+            background: #ffffff; 
+            color: #2c3e50; 
+            border-bottom-left-radius: 6px;
+            border: 1px solid #eef2f5;
+        }
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            padding: 10px 15px;
+            background: #ffffff;
+            border-radius: 20px;
+            border-bottom-left-radius: 6px;
+            border: 1px solid #eef2f5;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background-color: #00b4db;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        .input-area { 
+            display: flex; 
+            padding: 15px 20px 25px 20px; 
+            background: #ffffff; 
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.02);
+            z-index: 10;
+        }
+        input { 
+            flex: 1; 
+            padding: 16px 22px; 
+            border: 2px solid #eef2f5; 
+            border-radius: 30px; 
+            background: #f8fafb; 
+            color: #2c3e50; 
+            outline: none; 
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        input:focus {
+            border: 2px solid #00b4db;
+            background: white;
+            box-shadow: 0 0 12px rgba(0, 180, 219, 0.15);
+        }
+        button { 
+            margin-left: 12px; 
+            padding: 12px 26px; 
+            border: none; 
+            border-radius: 30px; 
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%); 
+            color: white; 
+            cursor: pointer; 
+            font-weight: 700; 
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 180, 219, 0.3);
+            transition: all 0.2s ease;
+        }
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 180, 219, 0.4);
+        }
+        button:disabled {
+            background: #eef2f5;
+            color: #aab7c4;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+<div class="chat-container">
+    <div class="header">
+        <div class="bot-logo">🛡️</div>
+        <span>Cyber Support</span>
+    </div>
+    <div class="chatbox" id="chatbox">
+        <div class="msg-wrapper bot" style="opacity: 1; transform: translateY(0);">
+            <div class="msg-logo">🤖</div>
+            <div class="msg">Hello! How can I assist you with Cyber Risk today?</div>
+        </div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Ask about Cyber Risk..." onkeypress="if(event.key === 'Enter') sendMessage()">
+        <button id="sendBtn" onclick="sendMessage()">Send</button>
+    </div>
+</div>
+<script>
+    async function sendMessage() {
+        const input = document.getElementById("userInput");
+        const chatbox = document.getElementById("chatbox");
+        const btn = document.getElementById("sendBtn");
+        
+        let msg = input.value.trim();
+        if (!msg) return;
+        
+        // Escape HTML for user input for safety
+        const safeUserMsg = msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+        // Append User Message
+        chatbox.innerHTML += `
+            <div class="msg-wrapper user">
+                <div class="msg">${safeUserMsg}</div>
+            </div>`;
+        input.value = "";
+        
+        // Disable UI
+        btn.innerText = "Wait";
+        btn.disabled = true;
+        input.disabled = true;
+        
+        // Show Typing Indicator
+        const typingId = "typing-" + Date.now();
+        chatbox.innerHTML += `
+            <div class="msg-wrapper bot" id="${typingId}">
+                <div class="msg-logo">🤖</div>
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>`;
+        
+        chatbox.scrollTop = chatbox.scrollHeight;
+
+        try {
+            const res = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: msg }) });
+            const data = await res.json();
+            
+            // Remove typing indicator
+            document.getElementById(typingId).remove();
+            
+            // Render Bot Response securely using marked library
+            // Markdown makes lists, headers, codeblocks, etc native HTML.
+            const parsedMarkdown = marked.parse(data.response || "No response");
+            
+            chatbox.innerHTML += `
+                <div class="msg-wrapper bot">
+                    <div class="msg-logo">🤖</div>
+                    <div class="msg">${parsedMarkdown}</div>
+                </div>`;
+        } catch (e) {
+            document.getElementById(typingId).remove();
+            chatbox.innerHTML += `
+                <div class="msg-wrapper bot">
+                    <div class="msg-logo">⚠️</div>
+                    <div class="msg">Error connecting to server.</div>
+                </div>`;
+        } finally {
+            chatbox.scrollTop = chatbox.scrollHeight;
+            btn.innerText = "Send";
+            btn.disabled = false;
+            input.disabled = false;
+            input.focus();
+        }
+    }
+</script>
+</body>
+</html>
