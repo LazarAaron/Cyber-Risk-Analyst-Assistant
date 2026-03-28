@@ -3,7 +3,7 @@ from groq import Groq
 
 app = Flask(__name__, template_folder='.')
 
-GROQ_API_KEY = "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"
+GROQ_API_KEY = "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"
 
 client = Groq(api_key=GROQ_API_KEY)
 
